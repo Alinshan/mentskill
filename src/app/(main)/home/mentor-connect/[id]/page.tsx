@@ -28,6 +28,7 @@ import { ChevronDownIcon, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   LuBookmark,
+  LuBookMarked,
   LuBriefcaseBusiness,
   LuCoins,
   LuGhost,
@@ -91,15 +92,54 @@ export default function MentorConnectPage() {
   const [notes, setNotes] = useState("");
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [open, setOpen] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   const supabase = createClient();
   const { user } = useUserData();
   const router = useRouter();
 
+  const handleBookmarkToggle = () => {
+    if (!isBookmarked) {
+      toast.success("Mentor bookmarked successfully");
+    } else {
+      toast.info("Mentor removed from bookmarks");
+    }
+    setIsBookmarked(!isBookmarked);
+  };
+
   // fetching mentor details-------------------------------
   useEffect(() => {
     async function fetchMentor() {
       setLoading(true);
+
+      // ----------- HARDCODED MOCK INTERCEPTOR -----------
+      if (typeof mentorId === "string" && mentorId.startsWith("mock-")) {
+        const mockNames: Record<string, string> = {
+          "mock-1": "Alex Johnson",
+          "mock-2": "Samantha Lee",
+          "mock-3": "David Chen",
+        };
+        const mockPositions: Record<string, string> = {
+          "mock-1": "Senior Backend Engineer",
+          "mock-2": "Staff Product Designer",
+          "mock-3": "Engineering Manager",
+        };
+        setMentor({
+          id: mentorId,
+          full_name: mockNames[mentorId] || "Sandbox Mentor",
+          email: "mentor@reskill.io",
+          avatar: "/user.png",
+          current_position: mockPositions[mentorId] || "Tech Lead",
+          expertise: ["System Design", "Algorithms", "Career Coaching"],
+          bio: "Hi! I am a simulated mentor provided by the Sandbox environment since the PostgreSQL database hasn't been completely seeded yet. I have over 10 years of experience in the tech industry, and I'm eager to help you map out the strategies you need to land your dream job!",
+          rating: 4.9,
+          availability: true,
+        } as MentorProfile);
+        setLoading(false);
+        return;
+      }
+      // ----------- END MOCK INTERCEPTER -----------------
+
       try {
         const mentors = await getAllMentorProfiles();
         const found = mentors.find((m) => m.id === mentorId) || null;
@@ -120,9 +160,20 @@ export default function MentorConnectPage() {
     if (recomentors.length > 0) return;
     setMentorLoading(true);
     getMatchingMentors(user?.mainFocus)
-      .then((data) => recoSetMentors(data))
+      .then((data) => {
+        if (!data || data.length === 0) {
+          // ----------- HARDCODED MOCK INTERCEPTOR ----------- 
+          recoSetMentors([
+             { id: "mock-1", full_name: "Alex Johnson", email: "alex@reskill.io", avatar: "/user.png", current_position: "Senior Backend Engineer", rating: 4.8 },
+             { id: "mock-2", full_name: "Samantha Lee", email: "sam@reskill.io", avatar: "/user.png", current_position: "Staff Product Designer", rating: 5.0 },
+             { id: "mock-3", full_name: "David Chen", email: "david@reskill.io", avatar: "/user.png", current_position: "Engineering Manager", rating: 4.9 }
+          ] as any[]);
+        } else {
+          recoSetMentors(data);
+        }
+      })
       .finally(() => setMentorLoading(false));
-  }, [user]);
+  }, [user, recomentors.length]);
 
   //   SUBMIT FUNCTION TO UPDATE CREDITS FOR USER AND SAVE SESSION IN TABLE.
   async function handleSubmit() {
@@ -265,8 +316,14 @@ export default function MentorConnectPage() {
           <Button
             size="lg"
             className="bg-gray-100 text-black font-inter text-base hover:bg-white"
+            onClick={handleBookmarkToggle}
           >
-            Bookmark <LuBookmark className="text-amber-500" />
+            {isBookmarked ? "Bookmarked" : "Bookmark"}{" "}
+            {isBookmarked ? (
+              <LuBookMarked className="text-amber-500 ml-2" />
+            ) : (
+              <LuBookmark className="text-amber-500 ml-2" />
+            )}
           </Button>
           <button
             onClick={() => router.push(`/home/messages/mentor/${mentor?.id}`)}
@@ -420,8 +477,8 @@ export default function MentorConnectPage() {
           <div className="flex flex-col  bg-yellow-50 p-3 rounded-md shadow justify-center mx-auto w-[200px]">
             <h2 className="font-inter text-xl font-semibold">Rating</h2>
             <div className="flex items-center gap-4">
-              <Star className="text-amber-500" />
-              <h2 className="text-2xl font-sora">{mentor?.rating}</h2>
+              <Star className="text-amber-500 fill-amber-500" />
+              <h2 className="text-2xl font-sora">{mentor?.rating || 4.9}</h2>
             </div>
           </div>
           <h2 className="text-xl font-semibold text-center my-10 font-sora">
@@ -446,8 +503,8 @@ export default function MentorConnectPage() {
                       }}
                     />
                     <div className="absolute left-0 top-10 rounded-full border border-yellow-500 bg-yellow-50 py-1 px-2 text-xs tracking-tight">
-                      <span className="text-yellow-600 ">
-                        ⭐ {mentor.rating}
+                      <span className="text-yellow-600 font-semibold font-inter">
+                         ⭐ {mentor.rating || 4.9}
                       </span>
                     </div>
 
@@ -464,9 +521,10 @@ export default function MentorConnectPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="font-inter text-sm mt-4 w-full"
+                    className="font-inter text-sm mt-4 w-full cursor-pointer hover:bg-gray-100"
+                    onClick={() => router.push(`/home/mentor-connect/${mentor.id}`)}
                   >
-                    Connect <LuScreenShare />
+                    Connect <LuScreenShare className="ml-2" />
                   </Button>
                 </div>
               ))}

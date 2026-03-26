@@ -31,7 +31,18 @@ const MessagesRightBar = () => {
 
     setDiscoverLoading(true);
     getRandomUsersByInstitution(user.institutionName, user.id)
-      .then((data) => setDiscoverUsers(data))
+      .then((data) => {
+        if (!data || data.length === 0) {
+          // ----------- HARDCODED MOCK INTERCEPTOR -----------
+          setDiscoverUsers([
+            { id: "mock-4", userName: "Sarah Collins", userEmail: "sarah@university.edu", avatar: "/user.png", institutionName: user.institutionName },
+            { id: "mock-5", userName: "Michael Vance", userEmail: "michael@university.edu", avatar: "/user.png", institutionName: user.institutionName },
+          ] as unknown as DBUser[]);
+          // ----------- END MOCK INTERCEPTER -----------------
+        } else {
+          setDiscoverUsers(data);
+        }
+      })
       .finally(() => setDiscoverLoading(false));
   }, [user]);
 

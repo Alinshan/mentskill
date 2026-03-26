@@ -22,18 +22,18 @@ type Profile = {
   avatar: string | null;
 };
 
-const MentorMessagesId = () => {
+const StudentMessagesId = () => {
   const params = useParams();
   const supabase = createClient();
-  const { mentor } = useUserData(); // ✅ logged in mentor
+  const { user } = useUserData(); // ✅ logged in student
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const profileId = params.id; // always peer id
-  const profileType = "mentor"; //  always mentor
+  const profileId = params.id as string;
+  const profileType = params.type as "mentor" | "peer";
 
   // 🔹 Fetch peer profile (users table only)
   useEffect(() => {
@@ -41,15 +41,19 @@ const MentorMessagesId = () => {
 
     // ----------- HARDCODED MOCK INTERCEPTOR -----------
     if (typeof profileId === "string" && profileId.startsWith("mock-")) {
+      const isMentor = profileType === "mentor";
       const mockNames: Record<string, string> = {
         "mock-1": "Alex Johnson",
         "mock-2": "Samantha Lee",
         "mock-3": "David Chen",
+        "mock-4": "Sarah Collins",
+        "mock-5": "Michael Vance",
       };
+      
       setProfile({
         id: profileId,
-        name: mockNames[profileId] || "Mock Student",
-        email: "student@university.edu",
+        name: mockNames[profileId] || (isMentor ? "Sandbox Mentor" : "Mock Student"),
+        email: isMentor ? "mentor@reskill.io" : "student@university.edu",
         avatar: "/user.png",
       });
       setLoading(false);
@@ -59,21 +63,25 @@ const MentorMessagesId = () => {
 
     const fetchProfile = async () => {
       setLoading(true);
+      const table = profileType === "mentor" ? "mentors" : "users";
+      const selectStr = profileType === "mentor" ? "id, full_name, email, avatar" : "id, userName, userEmail, avatar";
+
       const { data, error } = await supabase
-        .from("users")
-        .select("id, userName, userEmail, avatar")
+        .from(table)
+        .select(selectStr)
         .eq("id", profileId)
         .single();
 
       if (error) {
-        console.error("Error fetching peer profile:", error);
+        console.warn(`[MOCK INTERCEPTOR] Error fetching ${profileType} profile:`, error.message);
         setProfile(null);
       } else {
+        const d = data as any;
         setProfile({
-          id: data.id.toString(),
-          name: data.userName,
-          email: data.userEmail,
-          avatar: data.avatar,
+          id: d.id.toString(),
+          name: profileType === "mentor" ? d.full_name : d.userName,
+          email: profileType === "mentor" ? d.email : d.userEmail,
+          avatar: d.avatar,
         });
       }
       setLoading(false);
@@ -84,17 +92,23 @@ const MentorMessagesId = () => {
 
   // 🔹 Fetch messages
   useEffect(() => {
-    if (!profileId || !mentor?.id) return;
+    if (!profileId || !user?.id) return;
 
     // ----------- HARDCODED MOCK INTERCEPTOR -----------
     if (typeof profileId === "string" && profileId.startsWith("mock-")) {
+      const mockNames: Record<string, string> = {
+        "mock-1": "Alex Johnson",
+        "mock-2": "Samantha Lee",
+        "mock-3": "David Chen",
+      };
+      
       setMessages([
         {
           id: "msg-1",
           sender_id: profileId,
-          receiver_id: mentor.id,
-          receiver_type: "mentor",
-          content: "Hi! I saw your profile and would love some guidance on System Design interviews. Do you have any availability this week?",
+          receiver_id: user.id.toString(),
+          receiver_type: profileType,
+          content: profileType === "mentor" ? `Hello! I am ${mockNames[profileId] || "your Sandbox Mentor"}. How can I assist you with your career goals today?` : "Hey! I'm solving LeetCode problems, want to join?",
           created_at: new Date().toISOString(),
         }
       ]);
@@ -106,10 +120,9 @@ const MentorMessagesId = () => {
       const { data, error } = await supabase
         .from("messages")
         .select("*")
-        .eq("receiver_type", "mentor")
         .or(
-          `and(sender_id.eq.${mentor.id},receiver_id.eq.${profileId}),` +
-            `and(sender_id.eq.${profileId},receiver_id.eq.${mentor.id})`
+          `and(sender_id.eq.${user.id},receiver_id.eq.${profileId}),` +
+            `and(sender_id.eq.${profileId},receiver_id.eq.${user.id})`
         )
         .order("created_at", { ascending: true });
 
@@ -129,11 +142,8 @@ const MentorMessagesId = () => {
           const newMessage = payload.new as Message;
 
           if (
-            newMessage.receiver_type === "mentor" &&
-            ((newMessage.sender_id === mentor.id &&
-              newMessage.receiver_id === profileId) ||
-              (newMessage.sender_id === profileId &&
-                newMessage.receiver_id === mentor.id))
+              (newMessage.sender_id === user.id.toString() && newMessage.receiver_id === profileId) ||
+              (newMessage.sender_id === profileId && newMessage.receiver_id === user.id.toString())
           ) {
             setMessages((prev) => [...prev, newMessage]);
           }
@@ -144,16 +154,29 @@ const MentorMessagesId = () => {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, [profileId, mentor?.id]);
+  }, [profileId, user?.id, profileType]);
 
   // 🔹 Send message
   const sendMessage = async () => {
-    if (!text.trim() || !mentor?.id || !profileId) return;
+    if (!text.trim() || !user?.id || !profileId) return;
+
+    if (profileId.startsWith("mock-")) {
+       setMessages(prev => [...prev, {
+          id: `msg-${Date.now()}`,
+          sender_id: user.id.toString(),
+          receiver_id: profileId,
+          receiver_type: profileType,
+          content: text,
+          created_at: new Date().toISOString()
+       }]);
+       setText("");
+       return;
+    }
 
     const { error } = await supabase.from("messages").insert({
-      sender_id: mentor.id,
+      sender_id: user.id,
       receiver_id: profileId,
-      receiver_type: "mentor", //always mentor
+      receiver_type: profileType, 
       content: text,
     });
 
@@ -182,7 +205,7 @@ const MentorMessagesId = () => {
               />
               <div>
                 <h2 className="font-medium">{profile.name}</h2>
-                <p className="text-sm text-blue-100">Student</p>
+                <p className="text-sm text-blue-100 capitalize">{profileType}</p>
               </div>
             </div>
           )}
@@ -197,10 +220,10 @@ const MentorMessagesId = () => {
               <div
                 key={m.id}
                 className={`mb-2 ${
-                  m.sender_id === mentor?.id ? "text-right" : "text-left"
+                  m.sender_id === user?.id?.toString() ? "text-right" : "text-left"
                 }`}
               >
-                <span className="inline-block px-3 py-2 rounded-lg bg-white">
+                <span className={`inline-block px-3 py-2 rounded-lg ${m.sender_id === user?.id?.toString() ? "bg-blue-600 text-white" : "bg-white text-black"}`}>
                   {m.content}
                 </span>
               </div>
@@ -229,4 +252,4 @@ const MentorMessagesId = () => {
   );
 };
 
-export default MentorMessagesId;
+export default StudentMessagesId;

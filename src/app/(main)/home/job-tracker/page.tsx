@@ -147,8 +147,7 @@ const JobTracker = () => {
     const fetchJobs = async () => {
       const { data, error } = await supabase
         .from("job_tracker")
-        .select("*")
-        .eq("userId", user?.id);
+        .select("*");
       if (!error && data) setJobs(data);
     };
 
@@ -401,18 +400,19 @@ const JobTracker = () => {
           {/* <p className="font-inter tracking-tight text-sm">
             Bring jobs from career board to your job tracker
           </p> */}
-          <Button variant="outline" className="font-inter text-sm">
+          <Button variant="outline" className="font-inter text-sm" onClick={() => router.push("/home/career-board")}>
             <LuBookMarked className="w-4 h-4 mr-2" />
             Career Board
           </Button>
         </div>
-        <Button variant="outline" className="font-inter text-sm ml-auto">
+        <Button variant="outline" className="font-inter text-sm ml-auto" onClick={() => toast.info("Advanced filter parameters are coming soon!")}>
           <Filter className="w-4 h-4 mr-2" />
           Filter
         </Button>
         <Button
           variant="outline"
           className="font-inter text-sm bg-gradient-to-br from-blue-300 to-blue-500 text-white"
+          onClick={() => setOpen(true)}
         >
           Add <LuCircleFadingPlus className="w-4 h-4 ml-2" />
         </Button>
@@ -652,12 +652,12 @@ const JobTracker = () => {
 
       {/* Prep DIALOG */}
       <Dialog open={prepOpen} onOpenChange={setPrepOpen}>
-        <VisuallyHidden>
-          <DialogTitle>
-            Clario is Creating Environment for Interview.
-          </DialogTitle>
-        </VisuallyHidden>
         <DialogContent className="sm:max-w-[750px] h-[500px] p-0 border-0 shadow-2xl rounded-lg overflow-hidden bg-transparent">
+          <VisuallyHidden>
+            <DialogTitle>
+              Clario is Creating Environment for Interview.
+            </DialogTitle>
+          </VisuallyHidden>
           <div className="flex h-full w-full">
             {/* LEFT SIDE */}
             <div

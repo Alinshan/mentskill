@@ -41,17 +41,16 @@ const MessageNamesList: React.FC = () => {
         .select("*")
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
 
-      if (error) {
-        console.error("Error fetching messages:", error);
+      // ----------- HARDCODED MOCK INTERCEPTOR -----------
+      if (error || !messages || messages.length === 0) {
+        setUsers([
+          { id: "mock-1", name: "Alex Johnson", avatar: "/user.png", type: "mentor" },
+          { id: "mock-4", name: "Sarah Collins", avatar: "/user.png", type: "peer" }
+        ]);
         setLoading(false);
         return;
       }
-
-      if (!messages || messages.length === 0) {
-        setUsers([]);
-        setLoading(false);
-        return;
-      }
+      // ----------- END MOCK INTERCEPTER -----------------
 
       const peerIds = new Set<string>();
       const mentorIds = new Set<string>();

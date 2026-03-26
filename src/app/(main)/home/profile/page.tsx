@@ -15,11 +15,21 @@ import {
   LuUser,
 } from "react-icons/lu";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const ProfilePage = () => {
-  const { user } = useUserData();
+  const { user, setUser } = useUserData();
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && setUser) {
+      const objectUrl = URL.createObjectURL(file);
+      setUser((prev) => (prev ? { ...prev, avatar: objectUrl } : null));
+      toast.success("Avatar updated (Sandbox Memory Mode)");
+    }
+  };
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +59,17 @@ const ProfilePage = () => {
             <Card className="border-none shadow-md overflow-hidden relative">
               <div className="h-24 bg-gradient-to-r from-blue-400 to-indigo-500 w-full" />
               <CardContent className="pt-0 relative flex flex-col items-center">
-                <div className="relative -mt-12 group cursor-pointer inline-block">
+                <div 
+                  className="relative -mt-12 group cursor-pointer inline-block"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleAvatarUpload}
+                  />
                   <Image
                     src={user?.avatar || "/user.png"}
                     alt="User Avatar"

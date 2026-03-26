@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import { FaGithub } from "react-icons/fa";
 
 import { useEffect, useRef } from "react";
 
@@ -59,7 +60,7 @@ export default function AuthPage() {
     }
   }, []);
 
-  const handleLogin = async (provider: "discord" | "slack_oidc") => {
+  const handleLogin = async (provider: "discord" | "github") => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -115,16 +116,10 @@ export default function AuthPage() {
               </Button>
               <Button
                 className="font-inter text-sm tracking-wide bg-blue-50 text-black rounded border shadow-sm  hover:bg-blue-100 hover:scale-105 hover:border-blue-400 cursor-pointer  w-[280px] py-5"
-                onClick={() => handleLogin("slack_oidc")}
+                onClick={() => handleLogin("github")}
               >
-                <Image
-                  src="/slack.png"
-                  alt="Google"
-                  width={25}
-                  height={25}
-                  className="mr-5"
-                />{" "}
-                continue with Slack
+                <FaGithub className="mr-5 text-[25px]" />
+                continue with GitHub
               </Button>
             </div>
 
