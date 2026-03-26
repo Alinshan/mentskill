@@ -185,7 +185,6 @@ export default function MentorConnect() {
                       muted
                       controls
                       loop
-                      loading="lazy"
                       style={{
                         position: "absolute",
                         top: 0,

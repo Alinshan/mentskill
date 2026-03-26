@@ -109,7 +109,7 @@ export default function VideoPlayer() {
         autoPlay
         controls
         loop
-        loading="lazy"
+        // loading="lazy"
         style={{
           position: "absolute",
           top: 0,

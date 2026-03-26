@@ -107,7 +107,7 @@ export const AudioPlayerPlayButton = ({
   className,
   ...props
 }: AudioPlayerPlayButtonProps) => (
-  <Button asChild size="icon-sm" variant="outline">
+  <Button asChild size="icon" variant="outline">
     <MediaPlayButton
       className={cn("bg-transparent", className)}
       data-slot="audio-player-play-button"

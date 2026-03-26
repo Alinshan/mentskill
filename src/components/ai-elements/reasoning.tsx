@@ -217,6 +217,7 @@ export const ReasoningContent = memo(
       )}
       {...props}
     >
+    {/* @ts-ignore */}
       <Streamdown plugins={streamdownPlugins} {...props}>
         {children}
       </Streamdown>
