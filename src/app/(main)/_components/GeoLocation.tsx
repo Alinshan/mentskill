@@ -7,6 +7,8 @@ export default function GetUserLocation() {
     const {user} = useUserData();
     console.log("user id ", user?.id)
   useEffect(() => {
+    if (!user?.id) return; // Wait for user to load
+
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -20,7 +22,7 @@ export default function GetUserLocation() {
           const { error } = await supabase
             .from("users")
             .update({ latitude: lat, longitude: lon })
-            .eq("id", user?.id); 
+            .eq("id", user.id); 
 
           if (error) console.error(error);
         },
@@ -31,7 +33,7 @@ export default function GetUserLocation() {
     } else {
       console.error("Geolocation not supported by this browser");
     }
-  }, []);
+  }, [user?.id]);
 
   return null;
 }

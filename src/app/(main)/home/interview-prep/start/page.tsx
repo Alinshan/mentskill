@@ -632,14 +632,14 @@ Key Guidelines:
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="p-4  rounded-md max-w-md  overflow-hidden ">
-          <h1 className="text-center font-semibold font-inter text-xl">
+          <DialogTitle className="text-center font-semibold font-inter text-xl">
             Interview Ended Successfully{" "}
             <LuActivity className="inline w-5 h-5 ml-2" />
-          </h1>
-          <p className=" mt-3 font-inter text-center text-muted-foreground">
+          </DialogTitle>
+          <DialogDescription className=" mt-3 font-inter text-center text-muted-foreground">
             Kindly wait , insights are being generated for you. Then you can
             sefely leave this board.
-          </p>
+          </DialogDescription>
 
           {feedbackloading ? (
             <Button className="mt-5">

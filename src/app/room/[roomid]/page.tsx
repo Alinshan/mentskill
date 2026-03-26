@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useVideoCall } from "@/lib/videocall/useVideoCall";
 import { supabase } from "@/lib/videocall/supabaseClient";
+import { SupabaseService } from "@/lib/videocall/supabaseService";
 import toast from "react-hot-toast";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import {
@@ -111,42 +112,24 @@ export default function RoomPage() {
   }, [localStream]);
 
   const checkRoomAndJoin = async (id: string) => {
-    const { data: room, error } = await supabase
-      .from("rooms")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error || !room) {
+    try {
+      const room = await SupabaseService.getRoom(id);
+      if (room.status !== "active") {
+        toast.error("This session has ended");
+        return;
+      }
+      joinSession(id);
+    } catch {
       toast.error("Room not found");
       router.push("/");
-      return;
     }
-
-    if (room.status !== "active") {
-      toast.error("This session has ended");
-      return;
-    }
-
-    joinSession(id);
   };
 
   const loadChatHistory = async (id: string) => {
     try {
-      const { data, error } = await supabase
-        .from("chat_messages")
-        .select("*")
-        .eq("room_id", id)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("Failed to load chat history:", error);
-        return;
-      }
-      if (data) {
-        console.log("Chat history loaded:", data.length, "messages");
-        setChatMessages(data);
-      }
+      const data = await SupabaseService.getChatHistory(id);
+      console.log("Chat history loaded:", data.length, "messages");
+      setChatMessages(data);
     } catch (err) {
       console.error("Chat history error:", err);
     }
@@ -204,22 +187,17 @@ export default function RoomPage() {
 
     try {
       console.log("Sending message:", newMessage);
-      const { data, error } = await supabase.from("chat_messages").insert({
+      const data = await SupabaseService.sendMessage({
         room_id: id,
         user_id: userId || "anonymous",
         user_name: userId?.startsWith('guest-') ? 'Guest' : 'You',
         message: newMessage,
-      }).select().single();
-
-      if (error) {
-        console.error("Failed to send message:", error);
-        toast.error("Failed to send message");
-        return;
-      }
+      });
 
       console.log("Message sent successfully:", data);
       setNewMessage("");
       setShowEmojiPicker(false);
+      setChatMessages((prev) => [...prev, data]); // Append mock message locally
     } catch (err) {
       console.error("Send message error:", err);
       toast.error("Failed to send message");
@@ -231,22 +209,14 @@ export default function RoomPage() {
     if (!roomid) return;
     const id = Array.isArray(roomid) ? roomid[0] : roomid;
 
-    supabase.from("typing_status").upsert({
-      room_id: id,
-      is_typing: true,
-      updated_at: new Date().toISOString(),
-    });
+    SupabaseService.updateTypingStatus(id, userId || "anonymous", true, "You").catch(console.error);
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      supabase.from("typing_status").upsert({
-        room_id: id,
-        is_typing: false,
-        updated_at: new Date().toISOString(),
-      });
+      SupabaseService.updateTypingStatus(id, userId || "anonymous", false, "You").catch(console.error);
     }, 1500);
   };
 

@@ -73,7 +73,22 @@ export function AppSidebar() {
   const { mentor, loading } = useUserData();
   const supabase = createClient();
   const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [signoutLoading, setSignoutLoading] = useState(false);
+  
+  const handleSignOut = async () => {
+    try {
+      setSignoutLoading(true);
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      router.push("/");
+    } catch (error) {
+      toast.error("Failed to sign out securely.");
+      console.error(error);
+    } finally {
+      setSignoutLoading(false);
+    }
+  };
   const pathname = usePathname();
 
   async function signOut() {
@@ -136,7 +151,7 @@ export function AppSidebar() {
           : "hover:bg-white/10 hover:scale-105"
       }`}
         >
-          <Link href="/dashboard/upload" className="w-full">
+          <Link href="/dashboard/history" className="w-full">
             <p className="flex items-center gap-3 font-medium font-inter text-base text-white tracking-wide">
               <LuHistory className="text-xl" />
               All Sessions
@@ -247,6 +262,7 @@ export function AppSidebar() {
               {/* Actions */}
               <div className="flex flex-col gap-1">
                 <Button
+                  onClick={() => router.push('/dashboard/billing')}
                   variant="ghost"
                   className="justify-start gap-2 w-full font-roboto hover:bg-gray-50 rounded-none cursor-pointer"
                 >
@@ -257,6 +273,7 @@ export function AppSidebar() {
                 <Separator />
 
                 <Button
+                  onClick={() => router.push('/dashboard/profile')}
                   variant="ghost"
                   className="justify-between w-full font-roboto hover:bg-gray-50 rounded-none cursor-pointer"
                 >
@@ -270,6 +287,7 @@ export function AppSidebar() {
                 </Button>
 
                 <Button
+                  onClick={() => router.push('/dashboard/billing')}
                   variant="ghost"
                   className="justify-start gap-2 w-full font-roboto hover:bg-gray-50 rounded-none cursor-pointer"
                 >
@@ -278,6 +296,7 @@ export function AppSidebar() {
                 </Button>
 
                 <Button
+                  onClick={() => router.push('/dashboard/ai-assistant')}
                   variant="ghost"
                   className="justify-between w-full font-roboto hover:bg-gray-50 rounded-none cursor-pointer"
                 >
@@ -324,7 +343,8 @@ export function AppSidebar() {
                       </AlertDialogCancel>
                       <Button
                         className="bg-blue-500 text-white hover:bg-blue-700 font-inter cursor-pointer"
-                        onClick={signOut}
+                        disabled={signoutLoading}
+                        onClick={handleSignOut}
                       >
                         {signoutLoading ? (
                           <>

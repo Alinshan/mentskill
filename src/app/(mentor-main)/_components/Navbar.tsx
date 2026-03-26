@@ -59,6 +59,20 @@ export default function Navbar() {
   const supabase = createClient();
   const router = useRouter();
   const [signoutLoading, setSignoutLoading] = useState(false);
+  
+  const handleSignOut = async () => {
+    try {
+      setSignoutLoading(true);
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      router.push("/");
+    } catch (error) {
+      toast.error("Failed to sign out securely.");
+      console.error(error);
+    } finally {
+      setSignoutLoading(false);
+    }
+  };
 
   return (
     <div className="bg-white border-b-[1px] border-gray-200 pt-3 pb-1 px-4 pr-8 flex items-center gap-10 justify-between ">
@@ -78,26 +92,28 @@ export default function Navbar() {
           </Tooltip>
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            {loading ? (
-              <div className="flex items-center gap-2 pr-4 max-[1280px]:pr-0 rounded-full cursor-pointer">
-                <div className="bg-gray-200 animate-pulse rounded-full h-12 w-12"></div>
-                <div className="flex flex-col font-inter tracking-tight gap-2 max-[1280px]:hidden">
-                  <p className="bg-gray-200 animate-pulse rounded-md h-5 w-28"></p>
-                  <p className="bg-gray-200 animate-pulse rounded-md h-5 w-24"></p>
+          <DropdownMenuTrigger className="outline-none border-none bg-transparent p-0 m-0">
+            <div className="flex items-center gap-2 pr-4 max-[1280px]:pr-0 rounded-full cursor-pointer">
+              {loading ? (
+                <>
+                  <div className="bg-gray-200 animate-pulse rounded-full h-12 w-12 shrink-0"></div>
+                  <div className="flex flex-col font-inter tracking-tight gap-2 max-[1280px]:hidden">
+                    <p className="bg-gray-200 animate-pulse rounded-md h-5 w-28"></p>
+                    <p className="bg-gray-200 animate-pulse rounded-md h-5 w-24"></p>
+                  </div>
+                </>
+              ) : (
+                <div className="">
+                  <Image
+                    src={mentor?.avatar || "/user.png"}
+                    alt="User Avatar"
+                    width={52}
+                    height={52}
+                    className="rounded-full cursor-pointer object-cover"
+                  />
                 </div>
-              </div>
-            ) : (
-              <div className="">
-                <Image
-                  src={mentor?.avatar || "/user.png"}
-                  alt="User Avatar"
-                  width={52}
-                  height={52}
-                  className="rounded-full cursor-pointer"
-                />
-              </div>
-            )}
+              )}
+            </div>
           </DropdownMenuTrigger>
           {!loading && (
             <DropdownMenuContent
@@ -159,52 +175,50 @@ export default function Navbar() {
               <DropdownMenuSeparator />
 
               {/* Logout */}
-              <DropdownMenuItem asChild className="p-0 rounded-none ">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button className="flex items-center gap-3 w-full bg-blue-600  py-2 px-3 cursor-pointer text-white">
-                      <LuLogOut className="h-5 w-5 text-white " />
-                      Logout
-                    </Button>
-                  </AlertDialogTrigger>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="flex items-center gap-3 w-full bg-blue-600 py-2 px-3 cursor-pointer text-white hover:bg-blue-700 rounded-none rounded-b-xl focus:outline-none">
+                    <LuLogOut className="h-5 w-5 text-white " />
+                    Logout
+                  </Button>
+                </AlertDialogTrigger>
 
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="font-semibold font-inter text-xl">
-                        Are you sure you want to logout?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription className="font-inter text-muted-foreground tracking-tight text-base">
-                        This will end your session and you&apos;ll need to sign
-                        in again. Despite you can simply close the tab.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="font-inter cursor-pointer">
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction asChild>
-                        <Button
-                          disabled={signoutLoading}
-                          className="bg-blue-500 text-white hover:bg-blue-700 font-inter cursor-pointer"
-                          // onClick={signOut}
-                        >
-                          {signoutLoading ? (
-                            <>
-                              <LuLoader className="animate-spin mr-2 inline" />
-                              <span>Signing Out..</span>
-                            </>
-                          ) : (
-                            <>
-                              <LuLogOut className="mr-2 inline" />
-                              <span>Logout</span>
-                            </>
-                          )}
-                        </Button>
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </DropdownMenuItem>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="font-semibold font-inter text-xl">
+                      Are you sure you want to logout?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="font-inter text-muted-foreground tracking-tight text-base">
+                      This will end your session and you&apos;ll need to sign
+                      in again. Despite you can simply close the tab.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="font-inter cursor-pointer">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction asChild>
+                      <Button
+                        disabled={signoutLoading}
+                        className="bg-blue-500 text-white hover:bg-blue-700 font-inter cursor-pointer"
+                        onClick={handleSignOut}
+                      >
+                        {signoutLoading ? (
+                          <>
+                            <LuLoader className="animate-spin mr-2 inline" />
+                            <span>Signing Out..</span>
+                          </>
+                        ) : (
+                          <>
+                            <LuLogOut className="mr-2 inline" />
+                            <span>Logout</span>
+                          </>
+                        )}
+                      </Button>
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </DropdownMenuContent>
           )}
         </DropdownMenu>

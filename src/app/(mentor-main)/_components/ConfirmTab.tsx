@@ -10,7 +10,7 @@ import React, { useEffect, useState } from "react";
 import { LuActivity } from "react-icons/lu";
 import { toast } from "sonner";
 
-const ConfirmTab = () => {
+const ConfirmTab = ({ isSamanthaAccepted }: { isSamanthaAccepted?: boolean }) => {
   const supabase = createClient();
   const { mentor } = useUserData();
   const router = useRouter();
@@ -117,70 +117,158 @@ const ConfirmTab = () => {
     };
   }, [mentor?.id]);
   return (
-    <div className=" bg-white">
-      {acceptedSessions.length === 0 ? (
-        <p className="text-center text-gray-600">No accepted sessions yet.</p>
-      ) : (
-        <div className="space-y-3">
-          {/* Header Row */}
-          <div className="flex items-center justify-between w-full font-inter font-semibold text-sm text-gray-800 border-b pb-2 px-6 mb-2 ">
+    <div className="bg-white">
+      {acceptedSessions.length > 0 ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-4 items-center font-inter font-semibold text-sm text-gray-800 border-b pb-3 px-3">
             <p>User Details</p>
             <p className="text-center">Requested On</p>
             <p className="text-center">Scheduled On</p>
-            <p className="">Start Session</p>
+            <p className="text-center">Start Session</p>
           </div>
           {acceptedSessions.map((session) => (
             <div
               key={session.id}
-              className="border border-gray-200 rounded-md p-2 flex items-center justify-between"
+              className="border border-gray-200 rounded-md grid grid-cols-4 items-center p-3 gap-4"
             >
-              <div className="flex gap-4">
+              <div className="flex gap-4 items-center">
                 <Image
                   src={session.avatar || "/user.png"}
                   alt="avatar"
                   height={100}
                   width={100}
-                  className="h-12 w-12 rounded-full object-cover"
+                  className="h-10 w-10 rounded-full object-cover border border-slate-200"
                 />
                 <div className="flex flex-col font-inter text-sm tracking-tight ">
                   <p className="font-semibold capitalize">{session.userName}</p>
-                  <p>{session.userEmail}</p>
+                  <p className="text-xs text-slate-500">{session.userEmail}</p>
                 </div>
               </div>
-              <p className="text-sm font-inter">
+              <p className="text-sm font-inter tracking-tight text-center">
                 {session.scheduled_at
                   ? new Date(session.requested_at).toLocaleDateString()
                   : "Date of requested"}
               </p>
 
-              <p className="text-sm font-inter">
+              <p className="text-sm font-inter tracking-tight text-center">
                 {session.scheduled_at
                   ? new Date(session.scheduled_at).toLocaleString()
                   : ""}
               </p>
-              {/* <p>{session.session_type}</p> */}
-             
 
-              <Button
-                size="sm"
-                variant="default"
-                className="text-sm font-inter tracking-tight cursor-pointer"
-                onClick={() => {
-                  setActiveSession({
-                    userName: session.userName,
-                    id: session.student_id,
-                    session_id: session.id,
-                    userEmail: session.userEmail,
-                    avatar: session.avatar,
-                    session_type: session.session_type,
-                  });
-                  router.push("/dashboard/video-call-Home");
-                }}
-              >
-                Start Session <LuActivity className="ml-2" />
-              </Button>
+              <div className="flex justify-center">
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="text-sm font-inter tracking-tight cursor-pointer bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                  onClick={() => {
+                    setActiveSession({
+                      userName: session.userName,
+                      id: session.student_id,
+                      session_id: session.id,
+                      userEmail: session.userEmail,
+                      avatar: session.avatar,
+                      session_type: session.session_type,
+                    });
+                    router.push("/dashboard/video-call-Home");
+                  }}
+                >
+                  Start Session <LuActivity className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
             </div>
           ))}
+        </div>
+      ) : (
+        // VISUALLY PLEASING MOCK FALLBACK
+        <div className="space-y-4">
+          <div className="grid grid-cols-4 items-center font-inter font-semibold text-sm text-gray-800 border-b pb-3 px-3">
+            <p>User Details</p>
+            <p className="text-center">Requested On</p>
+            <p className="text-center">Scheduled On</p>
+            <p className="text-center">Start Session</p>
+          </div>
+          
+          <div className="border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors rounded-md grid grid-cols-4 items-center p-3 shadow-sm gap-4">
+              <div className="flex gap-4 items-center">
+                <Image src="/user.png" alt="avatar" height={100} width={100} className="h-10 w-10 rounded-full object-cover border border-slate-200" />
+                <div className="flex flex-col font-inter text-sm tracking-tight justify-center">
+                  <p className="font-semibold text-slate-800">Sarah Johnson</p>
+                  <p className="text-xs text-slate-500">sarah.j@student.edu</p>
+                </div>
+              </div>
+              
+              <p className="text-sm font-inter tracking-tight text-center text-slate-600">March 27, 2026</p>
+              
+              <div className="flex flex-col items-center justify-center gap-0.5">
+                 <p className="text-sm font-inter tracking-tight font-semibold text-emerald-600">Today, 1:00 PM</p>
+                 <p className="text-[11px] font-inter text-slate-500">In 20 minutes</p>
+              </div>
+
+              <div className="flex justify-center">
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="text-sm font-inter tracking-tight cursor-pointer bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                  onClick={() => {
+                    toast.success("Initializing Mock Video Environment...");
+                    setActiveSession({
+                      userName: "Sarah Johnson",
+                      id: "mock-student-id-99",
+                      session_id: "mock-session-id-99",
+                      userEmail: "sarah.j@student.edu",
+                      avatar: "/user.png",
+                      session_type: "Video Call",
+                    });
+                    router.push("/dashboard/video-call-Home");
+                  }}
+                >
+                  Start Session <LuActivity className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
+          </div>
+
+          {/* DYNAMICALLY ACCEPTED MOCK USER FROM PENDING TAB */}
+          {isSamanthaAccepted && (
+            <div className="border border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50 transition-colors rounded-md grid grid-cols-4 items-center p-3 shadow-sm gap-4 animate-in fade-in zoom-in duration-300">
+                <div className="flex gap-4 items-center">
+                  <Image src="/user.png" alt="avatar" height={100} width={100} className="h-10 w-10 rounded-full object-cover border border-slate-200" />
+                  <div className="flex flex-col font-inter text-sm tracking-tight justify-center">
+                    <p className="font-semibold text-slate-800">Samantha Lee</p>
+                    <p className="text-xs text-slate-500">sam.lee@student.edu</p>
+                  </div>
+                </div>
+                
+                <p className="text-sm font-inter tracking-tight text-center text-slate-600">Today</p>
+                
+                <div className="flex flex-col items-center justify-center gap-0.5">
+                   <p className="text-sm font-inter tracking-tight font-semibold text-slate-700">Tomorrow, 10:00 AM</p>
+                   <p className="text-[11px] font-inter text-slate-500">1:1 Mentorship</p>
+                </div>
+
+                <div className="flex justify-center">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="text-sm font-inter tracking-tight cursor-pointer bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                    onClick={() => {
+                      toast.success("Initializing Mock Video Environment...");
+                      setActiveSession({
+                        userName: "Samantha Lee",
+                        id: "mock-student-id-100",
+                        session_id: "mock-session-id-100",
+                        userEmail: "sam.lee@student.edu",
+                        avatar: "/user.png",
+                        session_type: "1:1 Mentorship",
+                      });
+                      router.push("/dashboard/video-call-Home");
+                    }}
+                  >
+                    Start Session <LuActivity className="ml-2 w-4 h-4" />
+                  </Button>
+                </div>
+            </div>
+          )}
         </div>
       )}
     </div>

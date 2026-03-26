@@ -54,7 +54,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Sparkle, Stars } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -87,6 +87,26 @@ export function AppSidebar() {
       setSignoutLoading(false);
     }
   }
+  // ----------------GLOBAL KEYBINDINGS----------------
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Must hold both Ctrl and Alt to trigger these shortcuts
+      if (e.ctrlKey && e.altKey) {
+        if (e.key.toLowerCase() === "p") {
+          e.preventDefault();
+          router.push("/home/profile");
+        } else if (e.key.toLowerCase() === "d") {
+          e.preventDefault();
+          router.push("/home/ai-tools/career-coach");
+        } else if (e.key.toLowerCase() === "l") {
+          e.preventDefault();
+          signOut();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [router]);
 
   return (
     <Sidebar>
@@ -342,6 +362,7 @@ export function AppSidebar() {
 
                 <Button
                   variant="ghost"
+                  onClick={() => router.push("/home/ai-tools/career-coach")}
                   className="justify-between w-full font-roboto hover:bg-gray-50 rounded-none cursor-pointer"
                 >
                   <div className="flex gap-2 items-center">

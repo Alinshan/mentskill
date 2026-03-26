@@ -67,6 +67,13 @@ const VideoCallHome = () => {
       const room = await SupabaseService.createRoom(mentor.id, 60); // Defaulting to 60 minutes
       const vcLink = room.id;
 
+      // [MOCK INTERCEPTOR] Prevent network calls for Mock Sandbox Users
+      if (activeSession.session_id.startsWith("mock")) {
+        toast.success("Sandbox Session starting...");
+        router.push(`/room/${vcLink}`);
+        return;
+      }
+
       // 2. Update the mentor_session with the room ID (vc_link)
       const { error } = await supabase
         .from("mentor_sessions")

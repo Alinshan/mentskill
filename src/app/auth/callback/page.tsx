@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { LuLoader } from "react-icons/lu";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SpinningText } from "@/components/magicui/spinning-text";
 
 import { Briefcase, Users } from "lucide-react";
@@ -55,11 +55,20 @@ const steps = [
 export default function CallbackPage() {
   const supabase = createClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading, ensureUserInDB, isNewUser } = useUserData();
 
-  // useEffect(() => {
-  //   ensureUserInDB();
-  // }, []);
+  // Exchange OAuth PKCE Code manually here because we are in a Page component!
+  useEffect(() => {
+    const code = searchParams.get("code");
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (!error) {
+           ensureUserInDB(); // Force explicit DB verification
+        }
+      });
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!loading && user) {
@@ -89,7 +98,7 @@ export default function CallbackPage() {
     }
   }
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <div className="flex items-center text-2xl font-raleway font-medium tracking-wide">
@@ -99,6 +108,30 @@ export default function CallbackPage() {
         <p className="mt-8 font-inter text-xl tracking-wide">
           Please wait and tighten your seatbelt
         </p>
+      </div>
+    );
+  }
+
+  if (!user && !loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h1 className="text-2xl font-bold text-red-500 mb-4">Profile Fetch Error</h1>
+        <p className="text-gray-600 max-w-md text-center">
+          We successfully authenticated your Google account, but we could not find or create your user profile in the database. 
+          <br/><br/>
+          <strong>Developer note:</strong> Have the `users` and `mentors` tables been configured in your new Supabase dashboard? Please check your browser developer tools console for specific database errors!
+        </p>
+        <div className="flex gap-4 mt-8">
+          <Button onClick={() => {
+              toast.info("Retrying verification...");
+              ensureUserInDB();
+          }} className="bg-blue-600 text-white hover:bg-blue-700">
+            Retry Authentication
+          </Button>
+          <Button variant="outline" onClick={() => router.push("/auth")}>
+            Go back
+          </Button>
+        </div>
       </div>
     );
   }

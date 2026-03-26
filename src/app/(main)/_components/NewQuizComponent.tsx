@@ -54,8 +54,10 @@ export default function Quiz() {
   }
 
   const statusToKeyMap: Record<string, keyof QuizData> = {
+    "10th student": "10",
     "12th student": "12",
     "diploma student": "diploma",
+    diploma: "diploma",
     graduate: "graduate",
     "working professional": "working professional",
   };

@@ -8,24 +8,73 @@ import { AnimatedGradientTextDemo } from "./_components/GradientText";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
+
+import { useEffect, useRef } from "react";
 
 export default function AuthPage() {
   const router = useRouter();
   const supabase = createClient();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
-  const handleLogin = async (provider: "google" | "discord" | "slack_oidc") => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: {
-          role: "user",
-        },
-      },
+  const handleGoogleSuccess = async (response: any) => {
+    const { error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: response.credential,
     });
-
     if (error) {
       console.error("Login error:", error.message);
+    } else {
+      router.push("/auth/callback");
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    // Check if script already exists to prevent double loading in strict mode
+    if (!document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.onload = () => renderGoogleButton();
+      document.body.appendChild(script);
+    } else {
+      // If already loaded
+      renderGoogleButton();
+    }
+
+    function renderGoogleButton() {
+      if ((window as any).google && googleButtonRef.current) {
+        (window as any).google.accounts.id.initialize({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "YOUR_CLIENT_ID_MISSING",
+          callback: handleGoogleSuccess,
+        });
+        (window as any).google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: "outline",
+          size: "large",
+          width: "280",
+          text: "continue_with",
+        });
+      }
+    }
+  }, []);
+
+  const handleLogin = async (provider: "discord" | "slack_oidc") => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          // Discord STRICTLY Rejects undocumented query parameters, append to the callback as a hash or use safe states if necessary.
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        toast.error(`OAuth Error: ${error.message}`);
+        console.error("Login error:", error.message);
+      }
+    } catch (err: any) {
+      toast.error("Failed to connect to Discord Provider.");
     }
   };
 
@@ -50,19 +99,7 @@ export default function AuthPage() {
               <h1 className="font-raleway text-3xl font-bold">Re:Skill</h1>
             </div>
             <div className="flex flex-col gap-3">
-              <Button
-                className="font-inter text-sm tracking-wide bg-blue-50 text-black rounded border shadow-sm hover:bg-blue-100 hover:scale-105 hover:border-blue-400 cursor-pointer w-[280px] py-5"
-                onClick={() => handleLogin("google")}
-              >
-                <Image
-                  src="/search.png"
-                  alt="Google"
-                  width={25}
-                  height={25}
-                  className="mr-5"
-                />{" "}
-                continue with Google
-              </Button>
+              <div ref={googleButtonRef} className="w-[280px] flex justify-center overflow-hidden rounded shadow-sm hover:scale-105 transition-transform cursor-pointer" />
               <Button
                 className="font-inter text-sm tracking-wide bg-blue-50 text-black rounded border shadow-sm  hover:bg-blue-100 hover:scale-105 hover:border-blue-400 cursor-pointer  w-[280px] py-5"
                 onClick={() => handleLogin("discord")}

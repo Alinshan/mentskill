@@ -1070,6 +1070,7 @@ export type StudentBlock = {
 
 
 export type QuizData = {
+  "10": StudentBlock;
   "12": StudentBlock;
   "diploma": StudentBlock;
   "graduate": StudentBlock;

@@ -6,19 +6,19 @@ export class MediaService {
   static async getUserMedia(
     quality: 'hd' | 'sd' | 'low' = 'hd'
   ): Promise<MediaStream> {
+    // Adaptive video constraints based on quality
+    const videoConstraints = this.getVideoConstraints(quality);
+
+    const constraints: MediaStreamConstraints = {
+      video: videoConstraints,
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    };
+
     try {
-      // Adaptive video constraints based on quality
-      const videoConstraints = this.getVideoConstraints(quality);
-
-      const constraints: MediaStreamConstraints = {
-        video: videoConstraints,
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      };
-
       return await navigator.mediaDevices.getUserMedia(constraints);
     } catch (error) {
       const err = error as DOMException;
@@ -26,23 +26,18 @@ export class MediaService {
       // If camera is in use, try audio only
       if (err.name === 'NotReadableError' || err.name === 'AbortError') {
         console.warn('⚠️ Camera in use by another app, trying audio only...');
-        try {
-          const audioOnly = await navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-            },
-          });
-          console.log('✅ Got audio-only stream (camera unavailable)');
-          return audioOnly;
-        } catch {
-          throw new Error('Microphone unavailable. Close other apps using it.');
-        }
+        return await navigator.mediaDevices.getUserMedia({
+          video: false,
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
       }
 
-      throw new Error(`Failed to access media: ${err.name}`);
+      // Re-throw raw error for downstream handling
+      throw err;
     }
   }
 
@@ -81,14 +76,8 @@ export class MediaService {
       audio: false,
     }
   ): Promise<MediaStream> {
-    try {
-      return await navigator.mediaDevices.getDisplayMedia(constraints);
-    } catch (error) {
-      if ((error as DOMException).name === 'NotAllowedError') {
-        throw new Error('Screen capture permission denied');
-      }
-      throw new Error(`Failed to get screen media: ${error}`);
-    }
+    // Let the native DOMException bubble up so callers can catch 'NotAllowedError' gracefully
+    return await navigator.mediaDevices.getDisplayMedia(constraints);
   }
 
   /**

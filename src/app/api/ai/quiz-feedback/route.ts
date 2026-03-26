@@ -46,14 +46,12 @@ function getSchemaAndPrompt(userStatus: string, mainFocus: string) {
     return { schema, prompt };
   }
 
-  //  && mainFocus === "career/ path guidance"
   if (userStatus !== "12th student") {
     const schema = z.object({
       insights: z.object({
         stream: z.string().optional(),
         confidence: z.string().optional(),
         Interest: z.string().optional(),
-        // reason: z.string().optional(),
         degree: z.array(z.string()).optional(),
         summary: z.string().optional(),
         careerOptions: z.array(z.string()).optional(),
@@ -85,7 +83,7 @@ function getSchemaAndPrompt(userStatus: string, mainFocus: string) {
 }
 
 const llm = new ChatGroq({
-  model: "meta-llama/llama-4-scout-17b-16e-instruct",
+  model: "llama-3.3-70b-versatile",
   temperature: 0.4,
   maxTokens: 600,
 });
@@ -117,7 +115,6 @@ export async function POST(request: Request) {
 
     const result = (await chain.invoke(input)) as z.infer<typeof schema>;
 
-    // Normalize (safe defaults to avoid UI crash) ---
     const finalResult = {
       insights: Object.fromEntries(
         Object.entries(result?.insights ?? {}).map(([key, val]) => [

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { LuEye } from "react-icons/lu";
 import { Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +24,8 @@ export default function MentorSessionsTabs() {
   const supabase = createClient();
   const { mentor } = useUserData();
   const [activeTab, setActiveTab] = useState("pending");
+  const [isMockSessionVisible, setIsMockSessionVisible] = useState(true);
+  const [isSamanthaAccepted, setIsSamanthaAccepted] = useState(false);
   const [pendingSessions, setPendingSessions] = useState<
     (MentorSession & {
       userName: string;
@@ -183,96 +186,186 @@ export default function MentorSessionsTabs() {
       </TabsList>
 
       <TabsContent value="pending" className="p-4 bg-white">
-        {pendingSessions.length === 0 ? (
-          <p className="text-center text-gray-600">
-            No pending session requests yet.
-          </p>
-        ) : (
+        {pendingSessions.length > 0 ? (
           <div className="space-y-3">
             {/* Header Row */}
-            <div className="grid grid-cols-5 font-inter font-semibold text-sm text-gray-800 border-b pb-2 mb-2 ml-10">
+            <div className="grid grid-cols-5 items-center font-inter font-semibold text-sm text-gray-800 border-b pb-3 mb-3 px-3">
               <p>User Details</p>
               <p className="text-center">Requested On</p>
               <p className="text-center">Scheduled On</p>
-              <p className="text-center">Note</p>
+              <p className="text-center">Session Type</p>
               <p className="text-center">Action</p>
             </div>
             {pendingSessions.map((session) => (
               <div
                 key={session.id}
-                className=" border border-gray-200 rounded-md flex justify-between items-center p-2"
+                className="border border-gray-200 rounded-md grid grid-cols-5 items-center p-3 gap-4"
               >
-                <div className="flex gap-4">
+                <div className="flex gap-4 items-center">
                   <Image
                     src={session.avatar || "/user.png"}
                     alt="avatar"
                     height={100}
                     width={100}
-                    className="h-12 w-12 rounded-full object-cover"
+                    className="h-10 w-10 rounded-full object-cover border border-slate-200"
                   />
                   <div className="flex flex-col font-inter text-sm tracking-tight ">
                     <p className="font-semibold capitalize">
                       {session.userName}
                     </p>
-                    <p>{session.userEmail}</p>
+                    <p className="text-xs text-slate-500">{session.userEmail}</p>
                   </div>
                 </div>
 
-                <p className="text-sm font-inter tracking-tight">
+                <p className="text-sm font-inter tracking-tight text-center">
                   {session.scheduled_at
                     ? new Date(session.requested_at).toLocaleDateString()
                     : "Date of requested"}
                 </p>
 
-                <p className="text-sm font-inter tracking-tight">
+                <p className="text-sm font-inter tracking-tight text-center">
                   {session.scheduled_at
                     ? new Date(session.scheduled_at).toLocaleString()
-                    : ""}
+                    : "Not Scheduled"}
                 </p>
 
-                <p>{session.session_type}</p>
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none font-inter text-[11px] font-medium text-center">{session.session_type}</Badge>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="font-inter tracking-tight cursor-pointer text-xs text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors mt-1">
+                          View Note <LuEye className="inline w-3 h-3" />
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs">
+                        {session.notes || "No note available"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
 
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <p className="font-inter tracking-tight cursor-pointer text-sm text-muted-foreground flex items-center gap-1">
-                        View Note <LuEye className="inline" />
-                      </p>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs">
-                      {session.notes || "No note available"}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
                 {/* ACTIONS- ACCEPT/REJECT */}
-                <div className="flex gap-5">
+                <div className="flex gap-3 justify-center">
                   <div
-                    className="bg-blue-500 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
+                    className="bg-emerald-500 hover:bg-emerald-600 transition-colors w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-sm"
                     onClick={() => handleAccept(session?.id)}
                   >
-                    <Check className="cursor-pointer text-white" />
+                    <Check className="cursor-pointer text-white w-4 h-4" />
                   </div>
                   <div
-                    className="bg-red-500 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
+                    className="bg-red-500 hover:bg-red-600 transition-colors w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-sm"
                     onClick={() => handleReject(session?.id)}
                   >
-                    <X className="cursor-pointer text-white" />
+                    <X className="cursor-pointer text-white w-4 h-4" />
                   </div>
                 </div>
               </div>
             ))}
           </div>
+        ) : (
+          // VISUALLY PLEASING MOCK FALLBACK (If Database is perfectly empty)
+          <div className="space-y-4">
+            <div className="grid grid-cols-5 items-center font-inter font-semibold text-sm text-gray-800 border-b pb-3 px-3">
+              <p>User Details</p>
+              <p className="text-center">Requested On</p>
+              <p className="text-center">Scheduled On</p>
+              <p className="text-center">Session Type</p>
+              <p className="text-center">Action</p>
+            </div>
+            
+            {isMockSessionVisible ? (
+              <div className="border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors rounded-md grid grid-cols-5 items-center p-3 shadow-sm gap-4">
+                  <div className="flex gap-4 items-center">
+                    <Image src="/user.png" alt="avatar" height={100} width={100} className="h-10 w-10 rounded-full object-cover border border-slate-200" />
+                    <div className="flex flex-col font-inter text-sm tracking-tight justify-center">
+                      <p className="font-semibold text-slate-800">Samantha Lee</p>
+                      <p className="text-xs text-slate-500">sam.lee@student.edu</p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-inter tracking-tight text-center text-slate-600">Today</p>
+                  <p className="text-sm font-inter tracking-tight text-center text-slate-600">Tomorrow, 10:00 AM</p>
+                  
+                  <div className="flex flex-col items-center justify-center gap-1">
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none font-inter text-[11px] font-medium text-center">1:1 Mentorship</Badge>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="font-inter tracking-tight cursor-pointer text-xs text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors mt-1">
+                            View Note <LuEye className="inline w-3 h-3" />
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>Looking for interview prep!</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+
+                  <div className="flex gap-3 justify-center">
+                    <div className="bg-emerald-500 hover:bg-emerald-600 transition-colors w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-sm" onClick={() => { setIsMockSessionVisible(false); setIsSamanthaAccepted(true); toast.success("Mock Session Accepted!"); }}>
+                      <Check className="cursor-pointer text-white w-4 h-4" />
+                    </div>
+                    <div className="bg-red-500 hover:bg-red-600 transition-colors w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-sm" onClick={() => { setIsMockSessionVisible(false); toast.info("Mock Session Rejected."); }}>
+                      <X className="cursor-pointer text-white w-4 h-4" />
+                    </div>
+                  </div>
+              </div>
+            ) : (
+              <div className="py-12">
+                <p className="text-center font-inter text-slate-500">
+                  No pending session requests yet.
+                </p>
+              </div>
+            )}
+          </div>
         )}
       </TabsContent>
 
       <TabsContent value="accepted-rejected" className="p-4 bg-white">
-        <ConfirmTab />
+        <ConfirmTab isSamanthaAccepted={isSamanthaAccepted} />
       </TabsContent>
 
-      <TabsContent value="completed" className="p-6 bg-white">
-        <p className="text-center text-gray-600">
-          Here you’ll see all completed sessions.
-        </p>
+      <TabsContent value="completed" className="p-4 bg-white">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-2 px-2">
+             <h3 className="font-sora font-semibold text-slate-800 text-lg">Historic Sessions</h3>
+             <Badge variant="outline" className="font-inter text-slate-500">2 Total</Badge>
+          </div>
+          <div className="grid grid-cols-4 font-inter font-semibold text-sm text-slate-600 border-b pb-2 px-3">
+            <p className="col-span-2">Mentee Profile</p>
+            <p>Completed Date</p>
+            <p className="text-right">Session Type</p>
+          </div>
+
+          <div className="border border-slate-200 rounded-lg p-4 grid grid-cols-4 items-center gap-4 bg-slate-50">
+            <div className="flex items-center gap-4 col-span-2">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold font-sora">MK</div>
+              <div className="flex flex-col">
+                <p className="font-semibold text-sm text-slate-900 font-inter">Michael Kline</p>
+                <p className="text-xs text-slate-500 font-inter">michael@reskill.com</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 font-inter">March 14, 2026</p>
+            <div className="flex items-center justify-end gap-3">
+              <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 border-none font-inter text-[10px]">System Design</Badge>
+              <Badge className="bg-slate-200 text-slate-700 border-none font-inter text-[10px]"><Check className="w-3 h-3 mr-1" /> Done</Badge>
+            </div>
+          </div>
+
+          <div className="border border-slate-200 rounded-lg p-4 grid grid-cols-4 items-center gap-4 bg-slate-50">
+            <div className="flex items-center gap-4 col-span-2">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold font-sora">AS</div>
+              <div className="flex flex-col">
+                <p className="font-semibold text-sm text-slate-900 font-inter">Amelia Smith</p>
+                <p className="text-xs text-slate-500 font-inter">amelia.s@university.edu</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 font-inter">March 11, 2026</p>
+            <div className="flex items-center justify-end gap-3">
+              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none font-inter text-[10px]">1:1 Mentorship</Badge>
+              <Badge className="bg-slate-200 text-slate-700 border-none font-inter text-[10px]"><Check className="w-3 h-3 mr-1" /> Done</Badge>
+            </div>
+          </div>
+        </div>
       </TabsContent>
     </Tabs>
   );

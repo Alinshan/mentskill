@@ -245,8 +245,6 @@ const JobTracker = () => {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          console.log("⏩ Redirecting to interview...");
-          router.push("/home/interview-prep/start");
           return 0;
         }
         return prev - 1;
@@ -254,7 +252,15 @@ const JobTracker = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [showInstructions, router]);
+  }, [showInstructions]);
+
+  // --- Phase 3: Redirect ---
+  useEffect(() => {
+    if (showInstructions && countdown === 0) {
+      console.log("⏩ Redirecting to interview...");
+      router.push("/home/interview-prep/start");
+    }
+  }, [countdown, showInstructions, router]);
   // ------Last animation MAGICUI----------------
   const [value, setValue] = useState(0);
   useEffect(() => {

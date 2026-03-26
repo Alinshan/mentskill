@@ -13,7 +13,7 @@ type QuizContextType = {
 const QuizContext = createContext<QuizContextType>({
   quizData: null,
   loadingQuiz: false,
-  refreshQuizData: async () => {},
+  refreshQuizData: async () => { },
 });
 
 export const QuizDataProvider = ({ children }: { children: React.ReactNode }) => {

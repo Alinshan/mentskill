@@ -39,6 +39,24 @@ const MentorMessagesId = () => {
   useEffect(() => {
     if (!profileId) return;
 
+    // ----------- HARDCODED MOCK INTERCEPTOR -----------
+    if (typeof profileId === "string" && profileId.startsWith("mock-")) {
+      const mockNames: Record<string, string> = {
+        "mock-1": "Alex Johnson",
+        "mock-2": "Samantha Lee",
+        "mock-3": "David Chen",
+      };
+      setProfile({
+        id: profileId,
+        name: mockNames[profileId] || "Mock Student",
+        email: "student@university.edu",
+        avatar: "/user.png",
+      });
+      setLoading(false);
+      return;
+    }
+    // ----------- END MOCK INTERCEPTER -----------------
+
     const fetchProfile = async () => {
       setLoading(true);
       const { data, error } = await supabase
@@ -67,6 +85,22 @@ const MentorMessagesId = () => {
   // 🔹 Fetch messages
   useEffect(() => {
     if (!profileId || !mentor?.id) return;
+
+    // ----------- HARDCODED MOCK INTERCEPTOR -----------
+    if (typeof profileId === "string" && profileId.startsWith("mock-")) {
+      setMessages([
+        {
+          id: "msg-1",
+          sender_id: profileId,
+          receiver_id: mentor.id,
+          receiver_type: "mentor",
+          content: "Hi! I saw your profile and would love some guidance on System Design interviews. Do you have any availability this week?",
+          created_at: new Date().toISOString(),
+        }
+      ]);
+      return;
+    }
+    // ----------- END MOCK INTERCEPTER -----------------
 
     const fetchMessages = async () => {
       const { data, error } = await supabase

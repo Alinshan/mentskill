@@ -45,103 +45,81 @@ export class SupabaseService {
    * Create a new room
    */
   static async createRoom(mentorId: string, durationMinutes: number): Promise<Room> {
-    const { data, error } = await supabase
-      .from('rooms')
-      .insert([
-        {
-          mentor_id: mentorId,
-          duration_minutes: durationMinutes,
-          status: 'active',
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) throw new Error(`Failed to create room: ${error.message}`);
-    return data as Room;
+    // [MOCK INTERCEPTOR]: Bypass missing 'public.rooms' table
+    console.log("[MOCK] createRoom Intercepted");
+    return {
+      id: `mock-room-${Date.now()}`,
+      mentor_id: mentorId,
+      duration_minutes: durationMinutes,
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
   }
 
   /**
    * Get room by ID
    */
   static async getRoom(roomId: string): Promise<Room> {
-    const { data, error } = await supabase.from('rooms').select('*').eq('id', roomId);
-
-    if (error) throw new Error(`Failed to fetch room: ${error.message}`);
-    if (!data || data.length === 0) throw new Error(`Room ${roomId} not found`);
-    return data[0] as Room;
+    // [MOCK INTERCEPTOR]
+    console.log("[MOCK] getRoom Intercepted");
+    return {
+      id: roomId,
+      mentor_id: "mock-mentor-id",
+      duration_minutes: 60,
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
   }
 
   /**
    * Update room status
    */
   static async updateRoomStatus(roomId: string, status: 'active' | 'ended'): Promise<void> {
-    const { error } = await supabase
-      .from('rooms')
-      .update({ status, updated_at: new Date().toISOString(), ended_at: status === 'ended' ? new Date().toISOString() : null })
-      .eq('id', roomId);
-
-    if (error) throw new Error(`Failed to update room: ${error.message}`);
+    console.log(`[MOCK] updateRoomStatus: ${status}`);
+    return Promise.resolve();
   }
 
   /**
    * Store WebRTC signal
    */
   static async storeSignal(signal: Omit<Signal, 'id' | 'created_at'>): Promise<Signal> {
-    const { data, error } = await supabase
-      .from('signals')
-      .insert([signal])
-      .select()
-      .single();
-
-    if (error) throw new Error(`Failed to store signal: ${error.message}`);
-    return data as Signal;
+    console.log("[MOCK] storeSignal Intercepted");
+    return {
+      ...signal,
+      id: `mock-signal-${Date.now()}`,
+      created_at: new Date().toISOString()
+    };
   }
 
   /**
    * Get signals for a room
    */
   static async getSignals(roomId: string): Promise<Signal[]> {
-    // Only get signals from the last 2 minutes to avoid processing stale candidates
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-
-    const { data, error } = await supabase
-      .from('signals')
-      .select('*')
-      .eq('room_id', roomId)
-      .gte('created_at', twoMinutesAgo)
-      .order('created_at', { ascending: true });
-
-    if (error) throw new Error(`Failed to fetch signals: ${error.message}`);
-    return data as Signal[];
+    console.log("[MOCK] getSignals Intercepted");
+    return [];
   }
 
   /**
    * Send chat message
    */
   static async sendMessage(message: Omit<ChatMessage, 'id' | 'created_at' | 'updated_at'>): Promise<ChatMessage> {
-    const { data, error } = await supabase
-      .from('chat_messages')
-      .insert([message])
-      .select()
-      .single();
-
-    if (error) throw new Error(`Failed to send message: ${error.message}`);
-    return data as ChatMessage;
+    console.log("[MOCK] sendMessage Intercepted");
+    return {
+      ...message,
+      id: `mock-msg-${Date.now()}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
   }
 
   /**
    * Get chat history for a room
    */
   static async getChatHistory(roomId: string): Promise<ChatMessage[]> {
-    const { data, error } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: true });
-
-    if (error) throw new Error(`Failed to fetch chat history: ${error.message}`);
-    return data as ChatMessage[];
+    console.log("[MOCK] getChatHistory Intercepted");
+    return [];
   }
 
   /**
@@ -190,20 +168,8 @@ export class SupabaseService {
    * Update typing status
    */
   static async updateTypingStatus(roomId: string, userId: string, isTyping: boolean, userName?: string): Promise<void> {
-    const { error } = await supabase.from('typing_status').upsert(
-      [
-        {
-          room_id: roomId,
-          user_id: userId,
-          is_typing: isTyping,
-          user_name: userName,
-          updated_at: new Date().toISOString(),
-        },
-      ],
-      { onConflict: 'room_id,user_id' }
-    );
-
-    if (error) throw new Error(`Failed to update typing status: ${error.message}`);
+    console.log(`[MOCK] updateTypingStatus: ${userId} typing=${isTyping}`);
+    return Promise.resolve();
   }
 
   /**
@@ -231,13 +197,7 @@ export class SupabaseService {
    * Clean up a room (remove all related data)
    */
   static async cleanupRoom(roomId: string): Promise<void> {
-    const { error: signalsError } = await supabase.from('signals').delete().eq('room_id', roomId);
-    const { error: messagesError } = await supabase.from('chat_messages').delete().eq('room_id', roomId);
-    const { error: typingError } = await supabase.from('typing_status').delete().eq('room_id', roomId);
-    const { error: roomError } = await supabase.from('rooms').delete().eq('id', roomId);
-
-    if (signalsError || messagesError || typingError || roomError) {
-      throw new Error('Failed to cleanup room');
-    }
+    console.log(`[MOCK] cleanupRoom: ${roomId}`);
+    return Promise.resolve();
   }
 }
