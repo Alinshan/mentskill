@@ -107,7 +107,7 @@ export type MentorSession = {
 };
 
 export type JobTrackerCard = {
-  id: number;
+  id: number | string;
   created_at: string;
   userId: any;
   stage: string;

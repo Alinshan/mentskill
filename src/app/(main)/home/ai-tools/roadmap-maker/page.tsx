@@ -121,23 +121,22 @@ const RoadmapMaker = () => {
   // =====================================
 
   // Maker roadmap From AI and Insert to supabase
-  const fetchRoadmap = async () => {
-    if (!field.trim()) return;
+  const fetchRoadmap = async (overrideField?: string) => {
+    const targetField = overrideField || field;
+    if (!targetField.trim()) return;
     setRoadmapId(null);
     setLoadingRoadmap(true);
     setError(null);
     setRoadmap(null);
 
     try {
-      // const res = await axios.post("/api/ai/roadmap-gen", { field });
-      // console.log("=========Fetching roadmap for========= :", field, timeline, mode);
       if (!timeline || !mode) {
-        toast.error("Please select timeline and mode from filters");
+        toast.error("Please select a timeline and mode from the filters in the bottom left corner.");
         setLoadingRoadmap(false);
         return;
       }
       const res = await axios.post("/api/ai/roadmap-gen", {
-        field,
+        field: targetField,
         timeline,
         mode,
       });
@@ -424,8 +423,8 @@ const RoadmapMaker = () => {
                 <div className="absolute bottom-2 right-4">
                   <Button
                     className="flex items-center gap-2 bg-blue-100 p-2 rounded text-gray-600 hover:text-white cursor-pointer"
-                    onClick={fetchRoadmap}
-                    disabled={loading}
+                    onClick={() => fetchRoadmap()}
+                    disabled={loadingRoadmap}
                   >
                     <LucideSendHorizontal size={18} className="-rotate-45" />
                   </Button>
@@ -508,7 +507,7 @@ const RoadmapMaker = () => {
           ) : roadmap && roadmap.initialNodes?.length > 0 ? (
             <Roadmap roadmap={roadmap} />
           ) : (
-            <DefaultRoadmap setField={setField} fetchRoadmap={fetchRoadmap} />
+            <DefaultRoadmap field={field} setField={setField} fetchRoadmap={fetchRoadmap} />
           )}
         </div>
       </div>

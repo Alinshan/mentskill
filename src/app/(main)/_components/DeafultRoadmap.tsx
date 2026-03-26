@@ -7,12 +7,16 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { LuActivity } from "react-icons/lu";
 
+import { toast } from "sonner"; // add toast to imports if needed, actually it's clearer to just check currentCareer
+
 interface DefaultRoadmapProps {
+  field: string;
   setField: (val: string) => void;
-  fetchRoadmap: () => void;
+  fetchRoadmap: (overrideField?: string) => void;
 }
 
 const DefaultRoadmap: React.FC<DefaultRoadmapProps> = ({
+  field,
   setField,
   fetchRoadmap,
 }) => {
@@ -20,11 +24,14 @@ const DefaultRoadmap: React.FC<DefaultRoadmapProps> = ({
   const { quizData } = useQuizData();
   const router = useRouter();
 
+  const currentCareer = field || quizData?.selectedCareer;
+
   const handleClick = () => {
-    if (quizData?.selectedCareer) {
-      setField(quizData.selectedCareer);
-      fetchRoadmap();
-    }
+    if (!currentCareer) return;
+    
+    // Safely force sync the text area (for visual consistency) and dispatch the Fetch sequence!
+    setField(currentCareer);
+    fetchRoadmap(currentCareer);
   };
 
   return (
@@ -45,7 +52,7 @@ const DefaultRoadmap: React.FC<DefaultRoadmapProps> = ({
             onClick={handleClick}
             className="mt-14 bg-gradient-to-br from-blue-50 to-indigo-200 border p-4 max-w-sm mx-auto rounded-xl shadow-sm relative hover:shadow-md transition cursor-pointer z-50"
           >
-            {quizData?.selectedCareer ? (
+            {currentCareer ? (
               <>
                 <h2 className="text-2xl font-semibold font-sora text-center text-gray-900">
                   Let&apos;s Start Your Journey
@@ -54,7 +61,7 @@ const DefaultRoadmap: React.FC<DefaultRoadmapProps> = ({
                 <p className="text-center mt-1 text-gray-600 text-base">
                   as{" "}
                   <span className="font-medium text-blue-500 text-xl font-inter capitalize">
-                    {quizData?.selectedCareer}
+                    {currentCareer}
                   </span>
                 </p>
               </>

@@ -113,6 +113,75 @@ const messages = [
   "Almost ready to launch your interview prep!",
 ];
 
+const MOCK_DEMO_JOBS: any[] = [
+  {
+    id: "mock_1",
+    job_title: "AI Product Manager",
+    company: "Meta",
+    description: "Lead AI product strategy, define roadmap, and coordinate between engineering, research, and business teams to deploy AI products.",
+    type: "Full-time",
+    stage: "saved",
+    applied_date: "03 / 29 / 2026",
+    note: "Strong understanding of AI/ML capabilities and product lifecycle management.",
+    userId: "mock_demo"
+  },
+  {
+    id: "mock_2",
+    job_title: "Cloud AI Engineer",
+    company: "AWS",
+    description: "Develop, deploy, and manage AI/ML models on cloud platforms. Ensure scalability, reliability, and performance optimization of AI systems.",
+    type: "Full-time",
+    stage: "applied",
+    applied_date: "03 / 29 / 2026",
+    note: "Experience with AWS SageMaker, Python, and cloud infrastructure required.",
+    userId: "mock_demo"
+  },
+  {
+    id: "mock_3",
+    job_title: "AI Ethics Specialist",
+    company: "OpenAI",
+    description: "Analyze and guide AI system development for ethical concerns, bias mitigation, and responsible AI deployment.",
+    type: "Full-time",
+    stage: "interviewing",
+    applied_date: "03 / 29 / 2026",
+    note: "Background in AI policy, ethics, or social sciences preferred.",
+    userId: "mock_demo"
+  },
+  {
+    id: "mock_4",
+    job_title: "Reinforcement Learning Engineer",
+    company: "DeepMind",
+    description: "Design and implement reinforcement learning algorithms for real-world applications. Conduct experiments, optimize models, and collaborate with research teams.",
+    type: "Full-time",
+    stage: "saved",
+    applied_date: "03 / 29 / 2026",
+    note: "Strong Python, RL frameworks, and mathematics background needed.",
+    userId: "mock_demo"
+  },
+  {
+    id: "mock_5",
+    job_title: "AI Software Developer",
+    company: "NVIDIA",
+    description: "Build AI-powered software applications, optimize GPU-accelerated deep learning models, and collaborate on AI SDKs and APIs.",
+    type: "Full-time",
+    stage: "applied",
+    applied_date: "03 / 29 / 2026",
+    note: "Experience with CUDA, PyTorch/TensorFlow, and software engineering best practices.",
+    userId: "mock_demo"
+  },
+  {
+    id: "mock_6",
+    job_title: "Computer Graphics & AI Engineer",
+    company: "Pixar",
+    description: "Use AI to enhance graphics rendering, animation, and visual effects pipelines. Collaborate with artists and engineers on creative projects.",
+    type: "Full-time",
+    stage: "interviewing",
+    applied_date: "03 / 29 / 2026",
+    note: "Knowledge of 3D graphics, Python/C++, and ML-based rendering techniques required.",
+    userId: "mock_demo"
+  }
+];
+
 const JobTracker = () => {
   const supabase = createClient();
   const { user } = useUserData();
@@ -148,7 +217,11 @@ const JobTracker = () => {
       const { data, error } = await supabase
         .from("job_tracker")
         .select("*");
-      if (!error && data) setJobs(data);
+      if (!error && data) {
+         setJobs([...data, ...MOCK_DEMO_JOBS]);
+      } else {
+         setJobs(MOCK_DEMO_JOBS);
+      }
     };
 
     fetchJobs();
@@ -348,6 +421,11 @@ const JobTracker = () => {
 
     // Update database
     try {
+      if (typeof jobId === "string" && jobId.startsWith("mock_")) {
+          toast.success(`Demo Job moved to ${newStage}!`);
+          return;
+      }
+
       const { error } = await supabase
         .from("job_tracker")
         .update({ stage: newStage })
@@ -372,6 +450,13 @@ const JobTracker = () => {
     if (!selectedJob?.id) {
       toast.error("No job selected to delete.");
       return;
+    }
+
+    if (typeof selectedJob.id === "string" && selectedJob.id.startsWith("mock_")) {
+        setJobs((prev) => prev.filter((j) => j.id !== selectedJob.id));
+        setIsOpenJobDialog(false);
+        toast.success("Demo Job removed!");
+        return;
     }
 
     const { error } = await supabase

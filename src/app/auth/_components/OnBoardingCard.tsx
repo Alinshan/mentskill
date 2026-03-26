@@ -128,9 +128,9 @@ export function OnboardingCard() {
     switch (step) {
       case 1:
         return (
-          /^\d{4}-\d{2}-\d{2}$/.test(data.dob) &&
-          /^[0-9()+\-\s]{7,}$/.test(data.phone.trim()) &&
-          data.institution.trim().length >= 5
+          data.dob.length > 0 &&
+          data.phone.trim().length > 0 &&
+          data.institution.trim().length > 0
         );
       case 2:
         return !!data.profession;

@@ -197,7 +197,14 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
           const { data: inserted, error: insertError } = await supabase
             .from("users")
             .insert([
-              { userName: name, userEmail: authUser.email, avatar, invite_link: uuidv4() }
+              { 
+                userName: name, 
+                userEmail: authUser.email, 
+                avatar, 
+                invite_link: uuidv4(),
+                totalCredits: 10,
+                remainingCredits: 10 
+              }
             ])
             .select()
             .single();
